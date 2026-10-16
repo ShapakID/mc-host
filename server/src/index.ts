@@ -14,13 +14,26 @@ app.use(cors());
 app.use(express.json());
 
 // Serve static frontend build if present
-const clientDistPath = path.resolve(__dirname, "../../../client/dist");
-if (fs.existsSync(clientDistPath)) {
+const possiblePaths = [
+  path.resolve(__dirname, "../../client/dist"),
+  path.resolve(__dirname, "../../../client/dist"),
+  path.resolve(process.cwd(), "client/dist"),
+  path.resolve(process.cwd(), "../client/dist")
+];
+
+let clientDistPath = "";
+for (const p of possiblePaths) {
+  if (fs.existsSync(p)) {
+    clientDistPath = p;
+    break;
+  }
+}
+
+if (clientDistPath) {
+  console.log(`[MC-Server-Manager] Serving static frontend from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
 } else {
-  // Fallback to internal server public or dev client dist
-  const altDist = path.resolve(__dirname, "../../client/dist");
-  app.use(express.static(altDist));
+  console.warn("[MC-Server-Manager] Client dist not found in standard paths:", possiblePaths);
 }
 
 // Wildcard SPA route fallback
@@ -28,12 +41,13 @@ app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api") || req.path.startsWith("/ws")) {
     return next();
   }
-  const indexPath = path.resolve(__dirname, "../../../client/dist/index.html");
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.send(`<h2>MC Server Manager Backend Active</h2><p>Frontend dist not built on this device. Open the dashboard on your laptop pointing to this host.</p>`);
+  if (clientDistPath) {
+    const indexPath = path.join(clientDistPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
   }
+  res.send(`<h2>MC Server Manager Backend Active</h2><p>Frontend dist not found. Expected at ${clientDistPath}</p>`);
 });
 
 // Public health check

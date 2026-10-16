@@ -12,12 +12,9 @@ fi
 # Buat folder data server jika belum ada
 mkdir -p mc-data
 
-# Jalankan server
-echo "[*] Menjalankan Minecraft Server Manager..."
+# Jalankan build jika dist belum ada atau setelah update
 cd server
-if [ ! -d "node_modules" ]; then
-    echo "[*] Menginstall dependensi pertama kali..."
-    npm install --omit=dev
-fi
+npm run build
 
+echo "[*] Menjalankan Minecraft Server Manager..."
 exec node dist/src/index.js
