@@ -4,6 +4,7 @@
   "private": true,
   "description": "Minecraft Server Manager for Android Termux",
   "scripts": {
+    "start": "bash start.sh",
     "build:server": "npm --prefix server run build",
     "build:client": "npm --prefix client run build",
     "build": "npm run build:client && npm run build:server",

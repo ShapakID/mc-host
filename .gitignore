@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .cache/
+!client/dist/
 
 # Environment and secrets
 .env
