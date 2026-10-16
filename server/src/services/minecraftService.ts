@@ -4,6 +4,8 @@ import fs from "fs";
 import path from "path";
 import { config } from "../config";
 
+import { getSettings } from "./installerService";
+
 export type ServerStatus = "stopped" | "starting" | "running" | "stopping";
 
 class MinecraftService extends EventEmitter {
@@ -37,7 +39,7 @@ class MinecraftService extends EventEmitter {
     if (!fs.existsSync(jarPath)) {
       return {
         success: false,
-        message: `File server jar not found: ${jarPath}. Download/place server.jar first.`
+        message: `File server jar not found: ${jarPath}. Download/place server.jar first via Setup.`
       };
     }
 
@@ -47,9 +49,10 @@ class MinecraftService extends EventEmitter {
       fs.writeFileSync(eulaPath, "eula=true\n", "utf8");
     }
 
+    const settings = getSettings();
     const args = [
-      `-Xms${config.mcInitRam}`,
-      `-Xmx${config.mcMaxRam}`,
+      `-Xms${settings.initRam}`,
+      `-Xmx${settings.maxRam}`,
       "-XX:+UseG1GC",
       "-jar",
       jarName,

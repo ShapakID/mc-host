@@ -8,6 +8,7 @@ import { config } from "./config";
 import { authMiddleware, validateWsToken } from "./middleware/auth";
 import { minecraftService } from "./services/minecraftService";
 import { getSystemStats } from "./services/systemService";
+import { getSettings, saveSettings, isInstalled, downloadPaperJar } from "./services/installerService";
 
 const app = express();
 app.use(cors());
@@ -59,8 +60,29 @@ app.get("/api/health", (_req, res) => {
 app.get("/api/status", authMiddleware, (_req, res) => {
   res.json({
     serverStatus: minecraftService.getStatus(),
+    installed: isInstalled(config.mcServerDir),
+    settings: getSettings(),
     system: getSystemStats()
   });
+});
+
+app.get("/api/settings", authMiddleware, (_req, res) => {
+  res.json(getSettings());
+});
+
+app.post("/api/settings", authMiddleware, (req, res) => {
+  const updated = saveSettings(req.body);
+  res.json({ success: true, settings: updated });
+});
+
+app.post("/api/setup/download", authMiddleware, async (req, res) => {
+  const { version } = req.body;
+  try {
+    await downloadPaperJar(config.mcServerDir, version || "1.20.4");
+    res.json({ success: true, message: "Paper jar downloaded successfully" });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 app.post("/api/server/start", authMiddleware, (_req, res) => {
